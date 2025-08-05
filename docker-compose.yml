@@ -27,7 +27,7 @@ services:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
       - "./letsencrypt:/letsencrypt"
     networks:
-      - foco # <-- ALTERADO
+      - Foco # <-- ALTERADO
 
   # --- SERVIÇO DA SUA APLICAÇÃO (RECRUTA.AI) ---
   recruta-ai:
@@ -35,7 +35,7 @@ services:
     container_name: recruta-ai-app
     restart: always
     networks:
-      - foco # <-- ALTERADO
+      - Foco # <-- ALTERADO
     environment:
       # INSTRUÇÃO: Todas estas variáveis você deverá preencher na interface do Portainer,
       # não diretamente neste arquivo.
@@ -69,5 +69,5 @@ services:
 
 # --- Rede para comunicação entre o proxy e a aplicação ---
 networks:
-  foco: # <-- ALTERADO
+  Foco: # <-- ALTERADO
     driver: bridge
