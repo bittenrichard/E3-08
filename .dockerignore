@@ -1,0 +1,15 @@
+# Dependências e arquivos de build locais
+node_modules
+dist
+dist-server
+npm-debug.log
+
+# Arquivos do Git e de configuração do editor
+.git
+.gitignore
+.vscode/
+.idea/
+
+# Arquivos de ambiente
+.env
+.env.*

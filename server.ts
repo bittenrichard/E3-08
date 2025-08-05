@@ -11,14 +11,35 @@ import fetch from 'node-fetch';
 import bcrypt from 'bcryptjs';
 import multer from 'multer';
 
+// --- INÍCIO DAS MODIFICAÇÕES PARA PRODUÇÃO ---
+import path from 'path';
+import { fileURLToPath } from 'url';
+// --- FIM DAS MODIFICAÇÕES PARA PRODUÇÃO ---
+
 const app = express();
 const port = 3001;
 
 const upload = multer(); // Multer para lidar com upload de arquivos
 
-app.use(cors({ origin: process.env.FRONTEND_URL || 'http://localhost:5173' }));
+// --- INÍCIO DAS MODIFICAÇÕES PARA PRODUÇÃO ---
+// Esta configuração de CORS é mais segura para produção.
+// Ela permite que APENAS o seu site frontend se comunique com o backend.
+const corsOptions = {
+  origin: 'https://recrutamentoia.com.br', // INSTRUÇÃO: Esta é a URL do seu frontend. Já está correta.
+  optionsSuccessStatus: 200
+};
+app.use(cors(corsOptions));
+// --- FIM DAS MODIFICAÇÕES PARA PRODUÇÃO ---
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// --- INÍCIO DAS MODIFICAÇÕES PARA PRODUÇÃO ---
+// Este trecho de código serve os arquivos visuais (frontend) da sua aplicação.
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+app.use(express.static(path.join(__dirname, 'public')));
+// --- FIM DAS MODIFICAÇÕES PARA PRODUÇÃO ---
 
 
 if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET || !process.env.GOOGLE_REDIRECT_URI) {
@@ -688,6 +709,14 @@ app.post('/api/google/calendar/create-event', async (req: Request, res: Response
         res.status(500).json({ success: false, message: 'Falha ao criar evento.' });
     }
 });
+
+// --- INÍCIO DAS MODIFICAÇÕES PARA PRODUÇÃO ---
+// Rota "catch-all": Se nenhuma rota de API corresponder, ela serve a página principal do frontend.
+// Isso é crucial para o react-router funcionar corretamente em produção.
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+// --- FIM DAS MODIFICAÇÕES PARA PRODUÇÃO ---
 
 app.listen(port, () => {
   console.log(`Backend rodando em http://localhost:${port}`);
