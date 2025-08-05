@@ -4,13 +4,12 @@ version: '3.8'
 services:
   # --- Serviço do Backend (API) ---
   backend:
-    # INSTRUÇÃO: Substitua 'orickjogando' pelo seu nome de usuário no Docker Hub ou outro registro.
+    # INSTRUÇÃO: A imagem que você vai construir e enviar para o Docker Hub
     image: orickjogando/recrutamentoia-backend:latest
     networks:
-      - Foco
+      - foco
     environment:
-      # INSTRUÇÃO: Todas estas variáveis você deverá preencher na interface do Portainer,
-      # como mostrado na sua imagem.
+      # INSTRUÇÃO: Todas estas variáveis você deverá preencher na interface do Portainer.
       - NODE_ENV=production
       - FRONTEND_URL=${FRONTEND_URL}
       - VITE_BASEROW_API_KEY=${VITE_BASEROW_API_KEY}
@@ -25,31 +24,32 @@ services:
         constraints: [node.role == manager]
       labels:
         - "traefik.enable=true"
-        - "traefik.docker.network=Foco"
-        - "traefik.http.routers.backend-router.rule=Host(`api.recrutamentoia.com.br`)"
+        - "traefik.docker.network=foco"
+        # INSTRUÇÃO: A linha abaixo foi corrigida para usar a URL correta do backend.
+        - "traefik.http.routers.backend-router.rule=Host(`backend.recrutamentoia.com.br`)"
         - "traefik.http.routers.backend-router.entrypoints=websecure"
-        - "traefik.http.routers.backend-router.tls.certresolver=letsencryptresolver" # Garanta que 'letsencryptresolver' é o nome do seu resolvedor no Traefik
+        - "traefik.http.routers.backend-router.tls.certresolver=letsencryptresolver"
         - "traefik.http.services.backend-service.loadbalancer.server.port=3001"
 
   # --- Serviço do Frontend (React App) ---
   frontend:
-    # INSTRUÇÃO: Substitua 'orickjogando' pelo seu nome de usuário no Docker Hub ou outro registro.
+    # INSTRUÇÃO: A imagem que você vai construir e enviar para o Docker Hub
     image: orickjogando/recrutamentoia-frontend:latest
     networks:
-      - Foco
+      - foco
     deploy:
       replicas: 1
       placement:
         constraints: [node.role == manager]
       labels:
         - "traefik.enable=true"
-        - "traefik.docker.network=Foco"
+        - "traefik.docker.network=foco"
         - "traefik.http.routers.frontend-router.rule=Host(`recrutamentoia.com.br`) || Host(`www.recrutamentoia.com.br`)"
         - "traefik.http.routers.frontend-router.entrypoints=websecure"
-        - "traefik.http.routers.frontend-router.tls.certresolver=letsencryptresolver" # Garanta que 'letsencryptresolver' é o nome do seu resolvedor no Traefik
+        - "traefik.http.routers.frontend-router.tls.certresolver=letsencryptresolver"
         - "traefik.http.services.frontend-service.loadbalancer.server.port=80"
 
-# --- Definição da Rede Externa 'Foco' ---
+# --- Definição da Rede Externa 'foco' ---
 networks:
-  Foco:
+  foco:
     external: true

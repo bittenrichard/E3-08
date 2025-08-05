@@ -2,11 +2,9 @@
 
 import React, { createContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { AuthState, LoginCredentials, SignUpCredentials, UserProfile } from '../types';
-// Remova: import { baserow } from '../../../shared/services/baserowClient'; // REMOVA esta linha
-// Remova: import bcrypt from 'bcryptjs'; // REMOVA esta linha
 
-// Remova: const USERS_TABLE_ID = '711'; // REMOVA esta linha
-// Remova: const SALT_ROUNDS = 10; // REMOVA esta linha
+// INSTRUÇÃO: Esta linha lê a variável de ambiente que configuramos no Docker.
+const API_URL = import.meta.env.VITE_API_BASE_URL;
 
 interface AuthContextType extends AuthState {
   error: string | null;
@@ -64,8 +62,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       return;
     }
     try {
-      // Chame o backend para buscar o perfil atualizado
-      const response = await fetch(`/api/users/${authState.profile.id}`);
+      // INSTRUÇÃO: A URL foi corrigida para usar a variável API_URL.
+      const response = await fetch(`${API_URL}/api/users/${authState.profile.id}`);
       if (!response.ok) {
         throw new Error('Falha ao buscar perfil atualizado.');
       }
@@ -82,7 +80,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setAuthError(null);
     setAuthState(prev => ({ ...prev, isLoading: true }));
     try {
-      const response = await fetch('/api/auth/signup', {
+      // INSTRUÇÃO: A URL foi corrigida para usar a variável API_URL.
+      const response = await fetch(`${API_URL}/api/auth/signup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(credentials),
@@ -109,7 +108,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setAuthError(null);
     setAuthState(prev => ({ ...prev, isLoading: true }));
     try {
-      const response = await fetch('/api/auth/login', {
+      // INSTRUÇÃO: A URL foi corrigida para usar a variável API_URL.
+      const response = await fetch(`${API_URL}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(credentials),

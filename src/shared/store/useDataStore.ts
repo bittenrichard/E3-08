@@ -4,10 +4,9 @@ import { create } from 'zustand';
 import { JobPosting } from '../../features/screening/types';
 import { Candidate } from '../../shared/types';
 import { UserProfile } from '../../features/auth/types';
-// Remova: import { baserow } from '../services/baserowClient'; // REMOVA esta linha
-// Remova: const VAGAS_TABLE_ID = '709'; // REMOVA esta linha
-// Remova: const CANDIDATOS_TABLE_ID = '710'; // REMOVA esta linha
-// Remova: const WHATSAPP_CANDIDATOS_TABLE_ID = '712'; // REMOVA esta linha
+
+// INSTRUÇÃO: Esta linha lê a variável de ambiente que configuramos no Docker.
+const API_URL = import.meta.env.VITE_API_BASE_URL;
 
 interface DataState {
   jobs: JobPosting[];
@@ -30,8 +29,8 @@ export const useDataStore = create<DataState>((set) => ({
   fetchAllData: async (profile: UserProfile) => {
     set({ isDataLoading: true, error: null });
     try {
-      // Chame o endpoint centralizado no seu backend
-      const response = await fetch(`/api/data/all/${profile.id}`);
+      // INSTRUÇÃO: A URL foi corrigida para usar a variável API_URL.
+      const response = await fetch(`${API_URL}/api/data/all/${profile.id}`);
       if (!response.ok) {
         throw new Error('Falha ao carregar dados do servidor.');
       }
@@ -58,12 +57,12 @@ export const useDataStore = create<DataState>((set) => ({
 
   deleteJobById: async (jobId: number) => {
     try {
-      // Chame o backend para deletar a vaga
-      const response = await fetch(`/api/jobs/${jobId}`, {
+      // INSTRUÇÃO: A URL foi corrigida para usar a variável API_URL.
+      const response = await fetch(`${API_URL}/api/jobs/${jobId}`, {
         method: 'DELETE',
       });
       if (!response.ok) {
-        const errorData = await response.json(); // Tenta ler o erro do corpo
+        const errorData = await response.json();
         throw new Error(errorData.error || "Não foi possível excluir a vaga.");
       }
       set((state) => ({
@@ -71,14 +70,13 @@ export const useDataStore = create<DataState>((set) => ({
       }));
     } catch (error) {
       console.error("Erro ao deletar vaga (useDataStore):", error);
-      throw error; // Re-lança para que o componente chamador possa lidar
+      throw error;
     }
   },
 
   updateCandidateStatusInStore: (candidateId: number, newStatus: 'Triagem' | 'Entrevista' | 'Aprovado' | 'Reprovado') => {
     set((state) => ({
       candidates: state.candidates.map(c => 
-        // Verifica se é o candidato correto e atualiza o status
         c.id === candidateId ? { ...c, status: { id: 0, value: newStatus } } : c
       )
     }));
