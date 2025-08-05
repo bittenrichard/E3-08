@@ -1,8 +1,13 @@
+# .dockerignore
+
 # Dependências e arquivos de build locais
 node_modules
 dist
 dist-server
 npm-debug.log
+
+# INSTRUÇÃO: A linha abaixo foi adicionada. Ela é a chave para resolver o erro de build.
+package-lock.json
 
 # Arquivos do Git e de configuração do editor
 .git

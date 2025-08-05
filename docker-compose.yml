@@ -1,44 +1,16 @@
 # docker-compose.yml
-# INSTRUÇÃO: Certifique-se de que a linha abaixo é a PRIMEIRA linha do seu arquivo, sem nenhum espaço antes.
 version: '3.8'
 
 services:
-  # --- SERVIÇO DO TRAEFIK (PROXY REVERSO) ---
-  traefik:
-    image: traefik:v3.0
-    container_name: traefik
-    restart: always
-    command:
-      # --- Configurações do Traefik ---
-      - "--api.insecure=true"
-      - "--providers.docker=true"
-      - "--providers.docker.exposedbydefault=false"
-      - "--entrypoints.web.address=:80"
-      - "--entrypoints.websecure.address=:443"
-      # --- Configurações do Let's Encrypt (Certificados SSL Automáticos) ---
-      - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
-      - "--certificatesresolvers.myresolver.acme.email=contatorichardbittencourt@gmail.com" # <-- INSTRUÇÃO: SUBSTITUA 'SEU_EMAIL_AQUI@seudominio.com' PELO SEU E-MAIL REAL.
-      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
-    ports:
-      - "80:80"
-      - "443:443"
-      - "8080:8080"
-    volumes:
-      - "/var/run/docker.sock:/var/run/docker.sock:ro"
-      - "./letsencrypt:/letsencrypt"
+  # --- Serviço do Backend (API) ---
+  backend:
+    # INSTRUÇÃO: Substitua 'orickjogando' pelo seu nome de usuário no Docker Hub ou outro registro.
+    image: orickjogando/recrutamentoia-backend:latest
     networks:
-      - Foco # <-- ALTERADO
-
-  # --- SERVIÇO DA SUA APLICAÇÃO (RECRUTA.AI) ---
-  recruta-ai:
-    build: .
-    container_name: recruta-ai-app
-    restart: always
-    networks:
-      - Foco # <-- ALTERADO
+      - foco
     environment:
       # INSTRUÇÃO: Todas estas variáveis você deverá preencher na interface do Portainer,
-      # não diretamente neste arquivo.
+      # como mostrado na sua imagem.
       - NODE_ENV=production
       - FRONTEND_URL=${FRONTEND_URL}
       - VITE_BASEROW_API_KEY=${VITE_BASEROW_API_KEY}
@@ -47,27 +19,37 @@ services:
       - GOOGLE_REDIRECT_URI=${GOOGLE_REDIRECT_URI}
       - N8N_TRIAGEM_WEBHOOK_URL=${N8N_TRIAGEM_WEBHOOK_URL}
       - N8N_SCHEDULE_WEBHOOK_URL=${N8N_SCHEDULE_WEBHOOK_URL}
-    labels:
-      # --- Rótulos para o Traefik descobrir e configurar este serviço ---
-      - "traefik.enable=true"
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.role == manager]
+      labels:
+        - "traefik.enable=true"
+        - "traefik.docker.network=foco"
+        - "traefik.http.routers.backend-router.rule=Host(`api.recrutamentoia.com.br`)"
+        - "traefik.http.routers.backend-router.entrypoints=websecure"
+        - "traefik.http.routers.backend-router.tls.certresolver=letsencryptresolver" # Garanta que 'letsencryptresolver' é o nome do seu resolvedor no Traefik
+        - "traefik.http.services.backend-service.loadbalancer.server.port=3001"
 
-      # --- Roteador para redirecionar HTTP para HTTPS ---
-      - "traefik.http.routers.recruta-ai-web.rule=Host(`recrutamentoia.com.br`) || Host(`backend.recrutamentoia.com.br`)"
-      - "traefik.http.routers.recruta-ai-web.entrypoints=web"
-      - "traefik.http.routers.recruta-ai-web.middlewares=redirect-to-https"
+  # --- Serviço do Frontend (React App) ---
+  frontend:
+    # INSTRUÇÃO: Substitua 'orickjogando' pelo seu nome de usuário no Docker Hub ou outro registro.
+    image: orickjogando/recrutamentoia-frontend:latest
+    networks:
+      - foco
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.role == manager]
+      labels:
+        - "traefik.enable=true"
+        - "traefik.docker.network=foco"
+        - "traefik.http.routers.frontend-router.rule=Host(`recrutamentoia.com.br`) || Host(`www.recrutamentoia.com.br`)"
+        - "traefik.http.routers.frontend-router.entrypoints=websecure"
+        - "traefik.http.routers.frontend-router.tls.certresolver=letsencryptresolver" # Garanta que 'letsencryptresolver' é o nome do seu resolvedor no Traefik
+        - "traefik.http.services.frontend-service.loadbalancer.server.port=80"
 
-      # --- Middleware de redirecionamento ---
-      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
-      - "traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true"
-
-      # --- Roteador principal para tráfego HTTPS ---
-      - "traefik.http.routers.recruta-ai-websecure.rule=Host(`recrutamentoia.com.br`) || Host(`backend.recrutamentoia.com.br`)"
-      - "traefik.http.routers.recruta-ai-websecure.entrypoints=websecure"
-      - "traefik.http.routers.recruta-ai-websecure.tls=true"
-      - "traefik.http.routers.recruta-ai-websecure.tls.certresolver=myresolver"
-      - "traefik.http.services.recruta-ai.loadbalancer.server.port=3001"
-
-# --- Rede para comunicação entre o proxy e a aplicação ---
+# --- Definição da Rede Externa 'foco' ---
 networks:
-  Foco: # <-- ALTERADO
-    driver: bridge
+  foco:
+    external: true
