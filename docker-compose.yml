@@ -7,7 +7,7 @@ services:
     # INSTRUÇÃO: A imagem que você vai construir e enviar para o Docker Hub
     image: orickjogando/recrutamentoia-backend:latest
     networks:
-      - foco
+      - Foco
     environment:
       # INSTRUÇÃO: Todas estas variáveis você deverá preencher na interface do Portainer.
       - NODE_ENV=production
@@ -24,7 +24,7 @@ services:
         constraints: [node.role == manager]
       labels:
         - "traefik.enable=true"
-        - "traefik.docker.network=foco"
+        - "traefik.docker.network=Foco"
         # INSTRUÇÃO: A linha abaixo foi corrigida para usar a URL correta do backend.
         - "traefik.http.routers.backend-router.rule=Host(`backend.recrutamentoia.com.br`)"
         - "traefik.http.routers.backend-router.entrypoints=websecure"
@@ -36,20 +36,20 @@ services:
     # INSTRUÇÃO: A imagem que você vai construir e enviar para o Docker Hub
     image: orickjogando/recrutamentoia-frontend:latest
     networks:
-      - foco
+      - Foco
     deploy:
       replicas: 1
       placement:
         constraints: [node.role == manager]
       labels:
         - "traefik.enable=true"
-        - "traefik.docker.network=foco"
+        - "traefik.docker.network=Foco"
         - "traefik.http.routers.frontend-router.rule=Host(`recrutamentoia.com.br`) || Host(`www.recrutamentoia.com.br`)"
         - "traefik.http.routers.frontend-router.entrypoints=websecure"
         - "traefik.http.routers.frontend-router.tls.certresolver=letsencryptresolver"
         - "traefik.http.services.frontend-service.loadbalancer.server.port=80"
 
-# --- Definição da Rede Externa 'foco' ---
+# --- Definição da Rede Externa 'Foco' ---
 networks:
-  foco:
+  Foco:
     external: true
